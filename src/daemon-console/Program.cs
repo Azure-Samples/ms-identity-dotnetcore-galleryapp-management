@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+using daemon_core;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -40,24 +41,28 @@ namespace daemon_console
     /// which uses application permissions.
     /// For more information see https://aka.ms/msal-net-client-credentials
     /// </summary>
-    class Program
+    public class Program
     {
+        private static ILogger Logger = null;
+        private static IInputProvider InputProvider = null;
+
         static void Main(string[] args)
         {
             try
             {
-                RunAsync().GetAwaiter().GetResult();
+                RunAsync(new ConsoleLogger(), new ConsoleInputProvider()).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Logger.Error(ex.Message);                
             }            
         }
 
-        private static async Task RunAsync()
+        public static async Task RunAsync(ILogger logger, IInputProvider inputProvider)
         {
+            Logger = logger;
+            InputProvider = inputProvider;
+
             AuthenticationConfig config = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
 
             // You can run this sample using ClientSecret or Certificate. The code will differ only when instantiating the IConfidentialClientApplication
@@ -93,26 +98,25 @@ namespace daemon_console
             {
                 result = await app.AcquireTokenForClient(scopes)
                     .ExecuteAsync();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Token acquired");
-                Console.ResetColor();
+                Logger.Info("Token acquired");                
             }
             catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
             {
                 // Invalid scope. The scope has to be of the form "https://resourceurl/.default"
                 // Mitigation: change the scope to be as expected
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Scope provided is not supported");
-                Console.ResetColor();
+                Logger.Error("Scope provided is not supported");
             }
 
             if (result != null)
             {
-                Console.WriteLine("Enter the name of the application you want to create?");
-                var appName = Console.ReadLine();
+                Logger.Info("Enter the name of the application you want to create?");
+                var appName = InputProvider.ReadInput();
                 var httpClient = new HttpClient();
                 var apiCaller = new ProtectedApiCallHelper(httpClient);
                 JObject appTemplatesResponse = await apiCaller.CallWebApiAndProcessResultASync($"{config.ApiUrl}beta/applicationTemplates?$search=\"{appName}\"&$filter='displayName' ne 'Custom' and categories/any()&$top=50&skip=0&$count=true", result.AccessToken);
+
+
+                // var appTemplatesResponse = new GalleryApps().GetGalleryAppsByName(appName);
                 var appId = DisplayGalleryResults(appTemplatesResponse);
             }
         }
@@ -131,14 +135,13 @@ namespace daemon_console
                 searchResults.Add(galleryApp);
             }
 
-            System.Console.WriteLine("Enter the id of the application you want to create");
-            System.Console.WriteLine("id | appId | appName ");
+            Logger.Info("Enter the id of the application you want to create");
+            Logger.Info("id | appId | appName ");
             for (int i = 0; i < searchResults.Count; i++)
             {
-                System.Console.WriteLine(i + " - " + searchResults[i].toString());
-                
+                Logger.Info(i + " - " + searchResults[i].toString());                
             }
-            string searchResultId = Console.ReadLine();
+            string searchResultId = InputProvider.ReadInput();
             return searchResults[int.Parse(searchResultId)].id;
         }
 
