@@ -27,7 +27,7 @@ using System;
 using System.Globalization;
 using System.IO;
 
-namespace daemon_console
+namespace daemon_core
 {
     /// <summary>
     /// Description of the configuration of an AzureAD public client application (desktop/mobile application). This should
