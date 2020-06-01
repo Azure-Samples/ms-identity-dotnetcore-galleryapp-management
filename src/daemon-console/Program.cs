@@ -64,59 +64,14 @@ namespace daemon_console
             InputProvider = inputProvider;
 
             AuthenticationConfig config = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
+            AuthenticationResult token = await AcquireTokenHelper.GetAcquiredToken(Logger, config);
 
-            // You can run this sample using ClientSecret or Certificate. The code will differ only when instantiating the IConfidentialClientApplication
-            bool isUsingClientSecret = AppUsesClientSecret(config);
 
-            // Even if this is a console application here, a daemon application is a confidential client application
-            IConfidentialClientApplication app;
-
-            if (isUsingClientSecret)
-            {
-                app = ConfidentialClientApplicationBuilder.Create(config.ClientId)
-                    .WithClientSecret(config.ClientSecret)
-                    .WithAuthority(new Uri(config.Authority))
-                    .Build();
-            }
-        
-            else
-            {
-                X509Certificate2 certificate = ReadCertificate(config.CertificateName);
-                app = ConfidentialClientApplicationBuilder.Create(config.ClientId)
-                    .WithCertificate(certificate)
-                    .WithAuthority(new Uri(config.Authority))
-                    .Build();
-            }
-
-            // With client credentials flows the scopes is ALWAYS of the shape "resource/.default", as the 
-            // application permissions need to be set statically (in the portal or by PowerShell), and then granted by
-            // a tenant administrator. 
-            string[] scopes = new string[] { $"{config.ApiUrl}.default" }; 
-            
-            AuthenticationResult result = null;
-            try
-            {
-                result = await app.AcquireTokenForClient(scopes)
-                    .ExecuteAsync();
-                Logger.Info("Token acquired");                
-            }
-            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
-            {
-                // Invalid scope. The scope has to be of the form "https://resourceurl/.default"
-                // Mitigation: change the scope to be as expected
-                Logger.Error("Scope provided is not supported");
-            }
-
-            if (result != null)
+            if (token != null)
             {
                 Logger.Info("Enter the name of the application you want to create?");
                 var appName = InputProvider.ReadInput();
-                var httpClient = new HttpClient();
-                var apiCaller = new ProtectedApiCallHelper(httpClient);
-                JObject appTemplatesResponse = await apiCaller.CallWebApiAndProcessResultASync($"{config.ApiUrl}beta/applicationTemplates?$search=\"{appName}\"&$filter='displayName' ne 'Custom' and categories/any()&$top=50&skip=0&$count=true", result.AccessToken);
-
-
-                // var appTemplatesResponse = new GalleryApps().GetGalleryAppsByName(appName);
+                JObject appTemplatesResponse = await new GalleryApps().GetGalleryAppsByNameAsync(appName, config, token);
                 var appId = DisplayGalleryResults(appTemplatesResponse);
             }
         }
@@ -144,56 +99,5 @@ namespace daemon_console
             string searchResultId = InputProvider.ReadInput();
             return searchResults[int.Parse(searchResultId)].id;
         }
-
-        /// <summary>
-        /// Checks if the sample is configured for using ClientSecret or Certificate. This method is just for the sake of this sample.
-        /// You won't need this verification in your production application since you will be authenticating in AAD using one mechanism only.
-        /// </summary>
-        /// <param name="config">Configuration from appsettings.json</param>
-        /// <returns></returns>
-        private static bool AppUsesClientSecret(AuthenticationConfig config)
-        {
-            string clientSecretPlaceholderValue = "[Enter here a client secret for your application]";
-            string certificatePlaceholderValue = "[Or instead of client secret: Enter here the name of a certificate (from the user cert store) as registered with your application]";
-
-            if (!String.IsNullOrWhiteSpace(config.ClientSecret) && config.ClientSecret != clientSecretPlaceholderValue)
-            {
-                return true;
-            }
-
-            else if (!String.IsNullOrWhiteSpace(config.CertificateName) && config.CertificateName != certificatePlaceholderValue)
-            {
-                return false;
-            }
-
-            else
-                throw new Exception("You must choose between using client secret or certificate. Please update appsettings.json file.");
-        }
-
-        private static X509Certificate2 ReadCertificate(string certificateName)
-        {
-            if (string.IsNullOrWhiteSpace(certificateName))
-            {
-                throw new ArgumentException("certificateName should not be empty. Please set the CertificateName setting in the appsettings.json", "certificateName");
-            }
-            X509Certificate2 cert = null;
-
-            using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
-            {
-                store.Open(OpenFlags.ReadOnly);
-                X509Certificate2Collection certCollection = store.Certificates;
-
-                // Find unexpired certificates.
-                X509Certificate2Collection currentCerts = certCollection.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
-
-                // From the collection of unexpired certificates, find the ones with the correct name.
-                X509Certificate2Collection signingCert = currentCerts.Find(X509FindType.FindBySubjectDistinguishedName, certificateName, false);
-
-                // Return the first certificate in the collection, has the right name and is current.
-                cert = signingCert.OfType<X509Certificate2>().OrderByDescending(c => c.NotBefore).FirstOrDefault();
-            }
-            return cert;
-        }
-
     }
 }

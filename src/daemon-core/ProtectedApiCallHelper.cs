@@ -30,7 +30,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-namespace daemon_console
+namespace daemon_core
 {
     /// <summary>
     /// Helper class to call a protected API and process its result

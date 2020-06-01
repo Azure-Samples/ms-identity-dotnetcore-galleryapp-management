@@ -1,6 +1,9 @@
+using daemon_core;
+using System;
+
 namespace daemon_console
 {
-    public class GalleryApp
+    public class GalleryApp : IGalleryApp
     {
         public string toString()
         {
