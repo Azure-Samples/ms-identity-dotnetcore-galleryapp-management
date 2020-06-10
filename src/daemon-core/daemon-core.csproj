@@ -9,8 +9,19 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Graph" Version="3.6.0" />
+    <PackageReference Include="Microsoft.Graph.Beta" Version="0.18.0-preview" />
+    <PackageReference Include="Microsoft.Graph.Core" Version="1.20.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.11.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
+
+  <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Microsoft.Graph.Beta'">
+        <Aliases>BetaLib</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
 
 </Project>
