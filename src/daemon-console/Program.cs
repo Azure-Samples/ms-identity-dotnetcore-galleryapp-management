@@ -42,7 +42,8 @@ using System.Text.RegularExpressions;
 namespace daemon_console
 {
     /// <summary>
-    /// This sample shows how to query the Microsoft Graph from a daemon application
+    /// This sample shows how to create and configure an Azure AD Gallery app
+    /// using the Microsoft Graph SDK from a daemon application
     /// which uses application permissions.
     /// For more information see https://aka.ms/msal-net-client-credentials
     /// </summary>
@@ -70,41 +71,56 @@ namespace daemon_console
             
             AuthenticationConfig config = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
 
+            // Create a client credential provider (auth provider) to create an instance of a Microsoft Graph client
             var authProvider = new ClientCredentialProvider(config, Logger);
+
+            // Create an instance of GalleryApps which contains the core logic to create and configure
+            // Azure AD applications
             GalleryApps coreHelper = new GalleryApps(authProvider);
+
+
             Logger.Info("Enter the name of the application you want to create?");
             var appName = InputProvider.ReadInput();
+
+            // Using the appName provided, search for applications in the Gallery that matches the appName
             Beta.IGraphServiceApplicationTemplatesCollectionPage appTemplatesResponse = await coreHelper.GetGalleryAppsByNameAsync(appName);
+            
             DisplayGalleryResults(appTemplatesResponse);
+            
             Logger.Info("Enter the id of the application you want to create");
             int selectedAppTemplateId = Convert.ToInt32(InputProvider.ReadInput());
-            Beta.ApplicationServicePrincipal applicationCreated = await coreHelper.createApplicationTemplate(appTemplatesResponse[selectedAppTemplateId].Id
-                , appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated", Logger);
 
-            //Create a service principal resource type
+            // Create application template with appTemplateID and appDisplayName
+            var appTemplateId = appTemplatesResponse[selectedAppTemplateId].Id;
+            var appDisplayName = appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated";
+            Beta.ApplicationServicePrincipal applicationCreated = await coreHelper.createApplicationTemplate(appTemplateId, appDisplayName, Logger);
+
+            //Create a service principal resource type with the desired configuration
             var servicePrincipal = new Beta.ServicePrincipal
             {         
                 PreferredSingleSignOnMode = "saml"
             };
-            //Create the webApplication resource type
+            //Create the webApplication resource type with the desired configuration
             var web = new WebApplication
             {
                 RedirectUris = new string[] {"https://signin.salesforce.com/saml"}
             };
-            //Create an application resource type
+            //Create an application resource type with the desired configuration
             var application = new Application
             {
                 Web = web,
                 IdentifierUris = new string[] { "https://signin.salesforce.com/saml" }
             };
 
+            //var spoId = applicationCreated.ServicePrincipal.Id;
+            //var appoId = applicationCreated.Application.Id;
+            var spoId = "7b7c4134-55ce-4e0c-a24e-3877d590e4ee";
+            var appoId = "14391f45-f6db-4053-9eaa-9bf64c4fee8c";
 
-            // Send servicePrincipal and Application to configure the applicationTemplate
-            await coreHelper.configureApplicationTemplate(servicePrincipal, application,
-                "7b7c4134-55ce-4e0c-a24e-3877d590e4ee", "14391f45-f6db-4053-9eaa-9bf64c4fee8c", Logger);
+            //Send servicePrincipal and Application to configure the applicationTemplate
+            await coreHelper.configureApplicationTemplate(servicePrincipal, application, spoId, appoId, Logger);
 
-            // Create claims mapping policy definition
-
+            // Read and assign the claims mapping policy definition
             string policyDefinition = System.IO.File.ReadAllText("C:/Users/luleon/ms-identity-dotnetcore-galleryapp-management/src/daemon-console/Files/claimsMappingPolicy.txt");
 
             var claimsMappingPolicy = new ClaimsMappingPolicy
@@ -114,48 +130,17 @@ namespace daemon_console
                     policyDefinition
                 },
                 DisplayName = "automated-salesforce"
-            };
-
+            };           
 
             // Create and assign claims mapping policy
 
-            ClaimsMappingPolicy claimsMappingPolicyCreated =   await coreHelper.configureClaimsMappingPolicy(claimsMappingPolicy, Logger);
+            ClaimsMappingPolicy claimsMappingPolicyCreated =   await coreHelper.configureClaimsMappingPolicy(claimsMappingPolicy, spoId, Logger);
             
-            //AuthenticationResult token = await AcquireTokenHelper.GetAcquiredToken(Logger, config);
-
-
-            //if (token != null)
-            //{
-            //    Logger.Info("Enter the name of the application you want to create?");
-            //    var appName = InputProvider.ReadInput();
-            //    JObject appTemplatesResponse = await new GalleryApps().GetGalleryAppsByNameAsync(appName, config, token);
-            //    var appId = DisplayGalleryResults(appTemplatesResponse);
-            //}
         }
-
         /// <summary>
-        /// Display the result of the Web API call
+        /// Display in the console the result of searching in the Azure AD Gallery
         /// </summary>
-        /// <param name="result">Object to display</param>
-        //private static string DisplayGalleryResults(JObject response)
-        //{  
-        //    JEnumerable<JToken> appSearchResults = response["value"].Children();
-        //    IList<GalleryApp> searchResults = new List<GalleryApp>();
-        //    foreach (JToken appSearchResult in appSearchResults)
-        //    {
-        //        GalleryApp galleryApp = appSearchResult.ToObject<GalleryApp>();
-        //        searchResults.Add(galleryApp);
-        //    }
-
-        //    Logger.Info("Enter the id of the application you want to create");
-        //    Logger.Info("id | appId | appName ");
-        //    for (int i = 0; i < searchResults.Count; i++)
-        //    {
-        //        Logger.Info(i + " - " + searchResults[i].toString());                
-        //    }
-        //    string searchResultId = InputProvider.ReadInput();
-        //    return searchResults[int.Parse(searchResultId)].id;
-        //}
+        /// <param name="applicationTemplates"></param>
         private static void DisplayGalleryResults(Beta.IGraphServiceApplicationTemplatesCollectionPage applicationTemplates)
         {
             var count = 0;
