@@ -24,7 +24,7 @@ namespace daemon_core
             _graphClient = new GraphServiceClient(authProvider);
             _graphBetaClient = new Beta.GraphServiceClient(authProvider);
         }
-        public async Task<JObject> GetGalleryAppsByNameAsync(string appName, AuthenticationConfig config, Microsoft.Identity.Client.AuthenticationResult token) 
+        public async Task<JObject> GetGalleryAppsByNameAsync(string appName, IAuthenticationConfig config, Microsoft.Identity.Client.AuthenticationResult token) 
         {
             var httpClient = new HttpClient();
             var apiCaller = new ProtectedApiCallHelper(httpClient);

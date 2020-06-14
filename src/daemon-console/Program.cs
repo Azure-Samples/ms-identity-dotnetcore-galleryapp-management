@@ -26,18 +26,9 @@ using Beta = BetaLib.Microsoft.Graph;
 using Microsoft.Graph;
 using daemon_console.Authentication;
 using daemon_core;
-using Microsoft.Identity.Client;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Cryptography.X509Certificates; //Only import this if you are using certificate
-using System.Text.Json;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 namespace daemon_console
 {

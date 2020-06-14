@@ -26,6 +26,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Globalization;
 using System.IO;
+using daemon_core;
 
 namespace daemon_console
 {
@@ -33,7 +34,7 @@ namespace daemon_console
     /// Description of the configuration of an AzureAD public client application (desktop/mobile application). This should
     /// match the application registration done in the Azure portal
     /// </summary>
-    public class AuthenticationConfig
+    public class AuthenticationConfig: IAuthenticationConfig
     {
         /// <summary>
         /// instance of Azure AD, for example public Azure or a Sovereign cloud (Azure China, Germany, US government, etc ...)
