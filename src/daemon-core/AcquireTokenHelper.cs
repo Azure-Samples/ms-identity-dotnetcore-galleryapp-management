@@ -1,20 +1,14 @@
 using Microsoft.Identity.Client;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Cryptography.X509Certificates; //Only import this if you are using certificate
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace daemon_core
 {
     public class AcquireTokenHelper
     {
-        public static async Task<AuthenticationResult> GetAcquiredToken(ILogger logger, AuthenticationConfig config) 
+        public static async Task<AuthenticationResult> GetAcquiredToken(ILogger logger, IAuthenticationConfig config) 
         {
             // You can run this sample using ClientSecret or Certificate. The code will differ only when instantiating the IConfidentialClientApplication
             bool isUsingClientSecret = AppUsesClientSecret(config);
@@ -67,7 +61,7 @@ namespace daemon_core
         /// </summary>
         /// <param name="config">Configuration from appsettings.json</param>
         /// <returns></returns>
-        private static bool AppUsesClientSecret(AuthenticationConfig config)
+        private static bool AppUsesClientSecret(IAuthenticationConfig config)
         {
             string clientSecretPlaceholderValue = "[Enter here a client secret for your application]";
             string certificatePlaceholderValue = "[Or instead of client secret: Enter here the name of a certificate (from the user cert store) as registered with your application]";

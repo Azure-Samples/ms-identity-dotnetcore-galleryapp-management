@@ -17,6 +17,11 @@ namespace daemon_console.Authentication
         AuthenticationConfig _config;
         ILogger _logger;
         IConfidentialClientApplication app;
+        /// <summary>
+        /// Create an authProvider of the type client credential provider
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="logger"></param>
         public ClientCredentialProvider(AuthenticationConfig config, ILogger logger)
         {
             _config = config;
@@ -44,13 +49,20 @@ namespace daemon_console.Authentication
                     .Build();
             }
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestMessage"></param>
+        /// <returns></returns>
         public async Task AuthenticateRequestAsync(HttpRequestMessage requestMessage)
         {
             requestMessage.Headers.Authorization =
                 new AuthenticationHeaderValue("bearer", await GetAccessTokenAsync());
         }
-
+        /// <summary>
+        /// Request an access token to call MS Graph APIs
+        /// </summary>
+        /// <returns>Access token</returns>
         private async Task<string> GetAccessTokenAsync()
         {
             // With client credentials flows the scopes is ALWAYS of the shape "resource/.default", as the
@@ -74,6 +86,11 @@ namespace daemon_console.Authentication
             }
             return result.AccessToken;
         }
+        /// <summary>
+        /// Verify if app is using a client secret or certificate
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns>True if you're using client secrets; False if you're using certificates</returns>
         private static bool AppUsesClientSecret(AuthenticationConfig config)
         {
             string clientSecretPlaceholderValue = "[Enter here a client secret for your application]";
@@ -92,6 +109,11 @@ namespace daemon_console.Authentication
             else
                 throw new Exception("You must choose between using client secret or certificate. Please update appsettings.json file.");
         }
+        /// <summary>
+        /// Read certificate
+        /// </summary>
+        /// <param name="certificateName"></param>
+        /// <returns>Certificate</returns>
         private static X509Certificate2 ReadCertificate(string certificateName)
         {
             if (string.IsNullOrWhiteSpace(certificateName))
