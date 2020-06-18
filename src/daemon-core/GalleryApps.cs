@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace daemon_core
 {
@@ -115,6 +116,22 @@ namespace daemon_core
             //    .AddAsync(claimsMappingPolicy);
 
             return result;
+
+        }
+        /// <summary>
+        /// Set the keyCredentials property in the servicePrincipal. It's expected that the servicePrincipal will have the
+        /// keyCredential and the passwordCredential configured
+        /// </summary>
+        /// <param name="servicePrincipal"></param>
+        /// <param name="spId"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public async Task configureSelfSignedCertificate(Beta.ServicePrincipal servicePrincipal, string spId, ILogger logger)
+        {
+            _ = await _graphBetaClient.ServicePrincipals[spId]
+               .Request()
+               .UpdateAsync(servicePrincipal);
+            logger.Info("servicePrincipal updated with new keyCredentials");
 
         }
         

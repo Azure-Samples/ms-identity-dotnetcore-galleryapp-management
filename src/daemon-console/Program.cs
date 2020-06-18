@@ -29,6 +29,7 @@ using daemon_core;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace daemon_console
 {
@@ -126,7 +127,60 @@ namespace daemon_console
             // Create and assign claims mapping policy
 
             ClaimsMappingPolicy claimsMappingPolicyCreated =   await coreHelper.configureClaimsMappingPolicy(claimsMappingPolicy, spoId, Logger);
-            
+
+            // Set custom signing key
+            string password = Guid.NewGuid().ToString();
+            string certName = appDisplayName + "SignedCert";
+            SelfSignedCertificate selfSignedCert = new SelfSignedCertificate(password, certName);
+            Guid keyIDPublicCert = Guid.NewGuid();
+
+            var privateKey = new Beta.KeyCredential()
+            {
+                CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
+                EndDateTime = selfSignedCert.EndDateTime,
+                KeyId = keyIDPublicCert,
+                StartDateTime = selfSignedCert.StartDateTime,
+                Type = "AsymmetricX509Cert",
+                Usage = "Sign",
+                Key = selfSignedCert.PrivateKey
+            };
+            var publicKey = new Beta.KeyCredential()
+            {
+                CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
+                EndDateTime = selfSignedCert.EndDateTime,
+                KeyId = Guid.NewGuid(),
+                StartDateTime = selfSignedCert.StartDateTime,
+                Type = "AsymmetricX509Cert",
+                Usage = "Verify",
+                Key = selfSignedCert.PublicKey
+            };
+
+            List<Beta.KeyCredential> keyCredentials = new List<Beta.KeyCredential>()
+            {
+                privateKey,
+                publicKey
+            };
+            List<Beta.PasswordCredential> passwordCredentials = new List<Beta.PasswordCredential>()
+            {
+                new Beta.PasswordCredential()
+                {
+                    CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
+                    KeyId = keyIDPublicCert,
+                    EndDateTime = selfSignedCert.EndDateTime,
+                    StartDateTime = selfSignedCert.StartDateTime,
+                    SecretText = password
+                }                
+            };
+            var spCertificate = new Beta.ServicePrincipal
+            {
+                KeyCredentials = keyCredentials,
+                PasswordCredentials = passwordCredentials,
+                PreferredTokenSigningKeyThumbprint = selfSignedCert.Thumbprint             
+
+            };
+
+            await coreHelper.configureSelfSignedCertificate(spCertificate, spoId, Logger);
+
         }
         /// <summary>
         /// Display in the console the result of searching in the Azure AD Gallery
