@@ -60,7 +60,7 @@ namespace daemon_console
         {
             Logger = logger;
             InputProvider = inputProvider;
-            
+
             AuthenticationConfig config = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
 
             // Create a client credential provider (auth provider) to create an instance of a Microsoft Graph client
@@ -68,77 +68,32 @@ namespace daemon_console
 
             // Create an instance of GalleryApps which contains the core logic to create and configure
             // Azure AD applications
-            GalleryApps coreHelper = new GalleryApps(authProvider);
+            GalleryAppsRepository coreHelper = new GalleryAppsRepository(authProvider);
 
+            // Step 1. Create the Gallery application
+            string appDisplayName = await CreateApplicationTemplate(coreHelper);
+            // Step 2. Configure single sign-on
+            string spoId = await ConfigureSingleSignOn(coreHelper);
+            // Step 3. Configure claims mapping
+            await ConfigureClaimsMapping(coreHelper, spoId);
+            // Step 4. Configure signing certificate
+            await ConfigureSigningCertificate(coreHelper, appDisplayName, spoId);
 
-            Logger.Info("Enter the name of the application you want to create?");
-            var appName = InputProvider.ReadInput();
+        }
 
-            // Using the appName provided, search for applications in the Gallery that matches the appName
-            Beta.IGraphServiceApplicationTemplatesCollectionPage appTemplatesResponse = await coreHelper.GetGalleryAppsByNameAsync(appName);
-            
-            DisplayGalleryResults(appTemplatesResponse);
-            
-            Logger.Info("Enter the id of the application you want to create");
-            int selectedAppTemplateId = Convert.ToInt32(InputProvider.ReadInput());
-
-            // Create application template with appTemplateID and appDisplayName
-            var appTemplateId = appTemplatesResponse[selectedAppTemplateId].Id;
-            var appDisplayName = appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated";
-            Beta.ApplicationServicePrincipal applicationCreated = await coreHelper.createApplicationTemplate(appTemplateId, appDisplayName, Logger);
-
-            //Create a service principal resource type with the desired configuration
-            var servicePrincipal = new Beta.ServicePrincipal
-            {         
-                PreferredSingleSignOnMode = "saml"
-            };
-            //Create the webApplication resource type with the desired configuration
-            var web = new WebApplication
-            {
-                RedirectUris = new string[] {"https://signin.salesforce.com/saml"}
-            };
-            //Create an application resource type with the desired configuration
-            var application = new Application
-            {
-                Web = web,
-                IdentifierUris = new string[] { "https://signin.salesforce.com/saml" }
-            };
-
-            //var spoId = applicationCreated.ServicePrincipal.Id;
-            //var appoId = applicationCreated.Application.Id;
-            var spoId = "7b7c4134-55ce-4e0c-a24e-3877d590e4ee";
-            var appoId = "14391f45-f6db-4053-9eaa-9bf64c4fee8c";
-
-            //Send servicePrincipal and Application to configure the applicationTemplate
-            await coreHelper.configureApplicationTemplate(servicePrincipal, application, spoId, appoId, Logger);
-
-            // Read and assign the claims mapping policy definition
-            string policyDefinition = System.IO.File.ReadAllText("C:/Users/luleon/ms-identity-dotnetcore-galleryapp-management/src/daemon-console/Files/claimsMappingPolicy.txt");
-
-            var claimsMappingPolicy = new ClaimsMappingPolicy
-            {
-                Definition = new List<string>()
-                {
-                    policyDefinition
-                },
-                DisplayName = "automated-salesforce"
-            };           
-
-            // Create and assign claims mapping policy
-
-            ClaimsMappingPolicy claimsMappingPolicyCreated =   await coreHelper.configureClaimsMappingPolicy(claimsMappingPolicy, spoId, Logger);
-
+        private static async Task ConfigureSigningCertificate(GalleryAppsRepository coreHelper, string appDisplayName, string spoId)
+        {
             // Set custom signing key
             string password = Guid.NewGuid().ToString();
             string certName = appDisplayName + "SignedCert";
             SelfSignedCertificate selfSignedCert = new SelfSignedCertificate(password, certName);
-            Guid keyIDPublicCert = Guid.NewGuid();
+            Guid keyIDPrivateCert = Guid.NewGuid();
 
             var privateKey = new Beta.KeyCredential()
             {
                 CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
                 EndDateTime = selfSignedCert.EndDateTime,
-                KeyId = keyIDPublicCert,
+                KeyId = keyIDPrivateCert,
                 StartDateTime = selfSignedCert.StartDateTime,
                 Type = "AsymmetricX509Cert",
                 Usage = "Sign",
@@ -165,23 +120,92 @@ namespace daemon_console
                 new Beta.PasswordCredential()
                 {
                     CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
-                    KeyId = keyIDPublicCert,
+                    KeyId = keyIDPrivateCert,
                     EndDateTime = selfSignedCert.EndDateTime,
                     StartDateTime = selfSignedCert.StartDateTime,
                     SecretText = password
-                }                
+                }
             };
-            var spCertificate = new Beta.ServicePrincipal
+            var spKeyCredentials = new Beta.ServicePrincipal
             {
                 KeyCredentials = keyCredentials,
                 PasswordCredentials = passwordCredentials,
-                PreferredTokenSigningKeyThumbprint = selfSignedCert.Thumbprint             
+                PreferredTokenSigningKeyThumbprint = selfSignedCert.Thumbprint
 
             };
 
-            await coreHelper.configureSelfSignedCertificate(spCertificate, spoId, Logger);
-
+            await coreHelper.configureSelfSignedCertificate(spKeyCredentials, spoId, Logger);
         }
+
+        private static async Task ConfigureClaimsMapping(GalleryAppsRepository coreHelper, string spoId)
+        {
+            // Read and assign the claims mapping policy definition
+            string policyDefinition = System.IO.File.ReadAllText("./Files/claimsMappingPolicy.txt");
+
+            var claimsMappingPolicy = new ClaimsMappingPolicy
+            {
+                Definition = new List<string>()
+                {
+                    policyDefinition
+                },
+                DisplayName = "automated-salesforce"
+            };
+
+            // Create and assign claims mapping policy
+
+            await coreHelper.configureClaimsMappingPolicy(claimsMappingPolicy, spoId, Logger);
+        }
+
+        private static async Task<string> ConfigureSingleSignOn(GalleryAppsRepository coreHelper)
+        {
+            //Create a service principal resource type with the desired configuration
+            var servicePrincipal = new Beta.ServicePrincipal
+            {
+                PreferredSingleSignOnMode = "saml",
+                LoginUrl = "https://salesforce.com"
+            };
+            //Create the webApplication resource type with the desired configuration
+            var web = new WebApplication
+            {
+                RedirectUris = new string[] { "https://signin.salesforce.com/saml" }
+            };
+            //Create an application resource type with the desired configuration
+            var application = new Application
+            {
+                Web = web,
+                IdentifierUris = new string[] { "https://testing.sdk.com" }
+            };
+
+            //var spoId = applicationCreated.ServicePrincipal.Id;
+            //var appoId = applicationCreated.Application.Id;
+            var spoId = "ee16cffa-2fe3-45a0-86c1-867c3dd83352";
+            var appoId = "03ea6316-3b80-41d1-b8a6-9b337f3b2491";
+
+            //Send servicePrincipal and Application to configure the applicationTemplate
+            await coreHelper.configureApplicationTemplate(servicePrincipal, application, spoId, appoId, Logger);
+            return spoId;
+        }
+
+        private static async Task<string> CreateApplicationTemplate(GalleryAppsRepository coreHelper)
+        {
+            Logger.Info("Enter the name of the application you want to create?");
+            var appName = InputProvider.ReadInput();
+
+            // Using the appName provided, search for applications in the Gallery that matches the appName
+            Beta.IGraphServiceApplicationTemplatesCollectionPage appTemplatesResponse = await coreHelper.GetGalleryAppsByNameAsync(appName);
+
+            DisplayGalleryResults(appTemplatesResponse);
+
+            Logger.Info("Enter the id of the application you want to create");
+            int selectedAppTemplateId = Convert.ToInt32(InputProvider.ReadInput());
+
+            // Create application template with appTemplateID and appDisplayName
+            var appTemplateId = appTemplatesResponse[selectedAppTemplateId].Id;
+            var appDisplayName = appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated";
+            Beta.ApplicationServicePrincipal applicationCreated = await coreHelper.createApplicationTemplate(appTemplateId, appDisplayName, Logger);
+            return appDisplayName;
+        }
+
         /// <summary>
         /// Display in the console the result of searching in the Azure AD Gallery
         /// </summary>
