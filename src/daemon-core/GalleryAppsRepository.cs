@@ -11,7 +11,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace daemon_core
 {
-    public class GalleryApps
+    public class GalleryAppsRepository
     {
         // Graph client
         private static GraphServiceClient _graphClient;
@@ -20,17 +20,10 @@ namespace daemon_core
         /// Initialize the graph clients using an authProvider
         /// </summary>
         /// <param name="authProvider"></param>
-        public GalleryApps(IAuthenticationProvider authProvider)
+        public GalleryAppsRepository(IAuthenticationProvider authProvider)
         {
             _graphClient = new GraphServiceClient(authProvider);
             _graphBetaClient = new Beta.GraphServiceClient(authProvider);
-        }
-        public async Task<JObject> GetGalleryAppsByNameAsync(string appName, IAuthenticationConfig config, Microsoft.Identity.Client.AuthenticationResult token) 
-        {
-            var httpClient = new HttpClient();
-            var apiCaller = new ProtectedApiCallHelper(httpClient);
-            JObject appTemplatesResponse = await apiCaller.CallWebApiAndProcessResultASync($"{config.ApiUrl}beta/applicationTemplates?$search=\"{appName}\"&$filter='displayName' ne 'Custom' and categories/any()&$top=50&skip=0&$count=true", token.AccessToken);
-            return appTemplatesResponse;
         }
         /// <summary>
         /// Search and retrieve the gallery applications that startWith the param "appName"
@@ -40,14 +33,21 @@ namespace daemon_core
         public async Task<Beta.IGraphServiceApplicationTemplatesCollectionPage> GetGalleryAppsByNameAsync(string appName)
         {
             Beta.IGraphServiceApplicationTemplatesCollectionPage galleryApps;
+            var queryObjects = new List<QueryOption>
+            {
+                new QueryOption("search", $"\"{appName}\"")
+            };
+
             galleryApps = await _graphBetaClient.ApplicationTemplates
-                    .Request()
+                    .Request(queryObjects)
                     .Select(m => new
                     {
                         m.DisplayName,
                         m.Id
                     })
-                    .Filter($"startswith(displayName,'{appName}')")
+                    .Filter($"displayName ne 'Custom' and categories/any()")
+                    .Top(5)
+                    .Skip(0)
                     .GetAsync();
             return galleryApps;
         }
