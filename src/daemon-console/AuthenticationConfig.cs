@@ -22,25 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Globalization;
-using System.IO;
-using daemon_core;
-
 namespace daemon_console
 {
+
+    using System;
+    using System.Globalization;
+    using System.IO;
+    using daemon_core;
+    using Microsoft.Extensions.Configuration;
+
     /// <summary>
     /// Description of the configuration of an AzureAD public client application (desktop/mobile application). This should
     /// match the application registration done in the Azure portal
     /// </summary>
-    public class AuthenticationConfig: IAuthenticationConfig
+    public class AuthenticationConfig : IAuthenticationConfig
     {
         /// <summary>
         /// instance of Azure AD, for example public Azure or a Sovereign cloud (Azure China, Germany, US government, etc ...)
         /// </summary>
         public string Instance { get; set; } = "https://login.microsoftonline.com/{0}";
-       
+
         /// <summary>
         /// Graph API endpoint, could be public Azure (default) or a Sovereign cloud (US government, etc ...)
         /// </summary>

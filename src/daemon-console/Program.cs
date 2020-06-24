@@ -21,18 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-extern alias BetaLib;
-using Beta = BetaLib.Microsoft.Graph;
-using Microsoft.Graph;
-using daemon_console.Authentication;
-using daemon_core;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
 
 namespace daemon_console
 {
+    extern alias BetaLib;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using daemon_console.Authentication;
+    using daemon_core;
+    using Microsoft.Graph;
+    using Beta = BetaLib.Microsoft.Graph;
+
     /// <summary>
     /// This sample shows how to create and configure an Azure AD Gallery app
     /// using the Microsoft Graph SDK from a daemon application
@@ -52,8 +52,8 @@ namespace daemon_console
             }
             catch (Exception ex)
             {
-                Logger.Error(ex.Message);                
-            }            
+                Logger.Error(ex.Message);
+            }
         }
 
         public static async Task RunAsync(ILogger logger, IInputProvider inputProvider)
