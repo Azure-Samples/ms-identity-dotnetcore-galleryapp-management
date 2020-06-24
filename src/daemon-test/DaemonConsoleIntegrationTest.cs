@@ -24,9 +24,9 @@ SOFTWARE.
 
 namespace daemon_test
 {
-    using System.Collections.Generic;
     using daemon_console;
     using daemon_core;
+    using daemon_core.Authentication;
     using Moq;
     using Xunit;
 
@@ -38,55 +38,30 @@ namespace daemon_test
         public DaemonConsoleIntegrationTest()
         {
             mockLogger = new Mock<ILogger>();
-            mockInputProvider = new Mock<IInputProvider>();
+            mockInputProvider = new Mock<IInputProvider>();          
         }
 
         [Fact]
         public async void RunAsyncIntegrationTest()
         {
             // Arrange
+            ClientCredentialProvider clientCredentialProvider = new ClientCredentialProvider(
+                AuthenticationConfig.ReadFromJsonFile("appsettings.json"),
+                mockLogger.Object);
+
+            GalleryAppsRepository galleryAppsRepository = new GalleryAppsRepository(clientCredentialProvider, mockLogger.Object);
+
             mockInputProvider
                 .SetupSequence(input => input.ReadInput())
                 .Returns("Salesforce")
                 .Returns("1");
 
             // Act
-            await Program.RunAsync(mockLogger.Object, mockInputProvider.Object);
+            await Program.RunAsync(mockLogger.Object, mockInputProvider.Object, galleryAppsRepository);
 
             // Assert
             mockLogger.Verify(logger => logger.Info(It.Is<string>(msg => msg == "Token acquired")));
             mockLogger.Verify(logger => logger.Info(It.Is<string>(msg => msg == "servicePrincipal updated with new keyCredentials")));
-        }
-
-        class MockLogger : ILogger
-        {
-            public IEnumerable<string> Messages => _messages;
-
-            private IList<string> _messages = new List<string>();
-
-            public MockLogger()
-            {
-            }
-
-            public void Error(string message)
-            {
-            }
-
-            public void Info(string message)
-            {
-                _messages.Add(message);
-            }
-        }
-
-        class MockInputProvider : IInputProvider
-        {
-            private int count;
-
-            public string ReadInput()
-            {
-                count++;
-                return count <= 1 ? "salesforce" : "1";
-            }
         }
     }
 }

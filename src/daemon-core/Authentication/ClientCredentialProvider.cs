@@ -34,6 +34,9 @@ namespace daemon_core.Authentication
     using Microsoft.Graph;
     using Microsoft.Identity.Client;
 
+    /// <summary>
+    /// Create a client credential provider (auth provider) to create an instance of a Microsoft Graph client
+    /// </summary>
     public class ClientCredentialProvider : IAuthenticationProvider
     {
         private readonly AuthenticationConfig _config;
@@ -99,10 +102,8 @@ namespace daemon_core.Authentication
             AuthenticationResult result = null;
             try
             {
-                result = await app.AcquireTokenForClient(scopes)
-                    .ExecuteAsync();
+                result = await app.AcquireTokenForClient(scopes).ExecuteAsync();                
                 _logger.Info("Token acquired");
-
             }
             catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
             {
@@ -112,6 +113,7 @@ namespace daemon_core.Authentication
             }
             return result.AccessToken;
         }
+
         /// <summary>
         /// Verify if app is using a client secret or certificate
         /// </summary>
@@ -135,6 +137,7 @@ namespace daemon_core.Authentication
             else
                 throw new Exception("You must choose between using client secret or certificate. Please update appsettings.json file.");
         }
+
         /// <summary>
         /// Read certificate
         /// </summary>

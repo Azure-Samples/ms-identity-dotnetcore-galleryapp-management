@@ -30,19 +30,25 @@ namespace daemon_core
     using Microsoft.Graph;
     using Beta = BetaLib.Microsoft.Graph;
 
+    /// <summary>
+    /// Contains the core logic to create and configure Azure AD applications.
+    /// </summary>
     public class GalleryAppsRepository
     {
         // Graph client
         private static GraphServiceClient _graphClient;
         private static Beta.GraphServiceClient _graphBetaClient;
+        private readonly ILogger logger;
+
         /// <summary>
         /// Initialize the graph clients using an authProvider
         /// </summary>
         /// <param name="authProvider"></param>
-        public GalleryAppsRepository(IAuthenticationProvider authProvider)
+        public GalleryAppsRepository(IAuthenticationProvider authProvider, ILogger logger)
         {
             _graphClient = new GraphServiceClient(authProvider);
             _graphBetaClient = new Beta.GraphServiceClient(authProvider);
+            this.logger = logger;
         }
         /// <summary>
         /// Search and retrieve the gallery applications that startWith the param "appName"
@@ -77,7 +83,7 @@ namespace daemon_core
         /// <param name="appDisplayName"></param>
         /// <param name="logger"></param>
         /// <returns>The application and service principal created in the ApplicationServicePrincipal resource type</returns>
-        public async Task<Beta.ApplicationServicePrincipal> createApplicationTemplate(string id, string appDisplayName, ILogger logger)
+        public async Task<Beta.ApplicationServicePrincipal> CreateApplicationTemplate(string id, string appDisplayName)
         {
             var result = await _graphBetaClient.ApplicationTemplates[id]
                 .Instantiate(appDisplayName)
@@ -95,18 +101,18 @@ namespace daemon_core
         /// <param name="spId"></param>
         /// <param name="appId"></param>
         /// <param name="loger"></param>
-        public async Task configureApplicationTemplate(Beta.ServicePrincipal servicePrincipal, Application application, string spId, string appId, ILogger loger)
+        public async Task configureApplicationTemplate(Beta.ServicePrincipal servicePrincipal, Application application, string spId, string appId)
         {
             _ = await _graphBetaClient.ServicePrincipals[spId]
                 .Request()
                 .UpdateAsync(servicePrincipal);
-            loger.Info("servicePrincipal updated");
+            logger.Info("servicePrincipal updated");
 
             _ = await _graphClient.Applications[appId]
                 .Request()
                 .UpdateAsync(application);
 
-            loger.Info("Application updated");
+            logger.Info("Application updated");
         }
         /// <summary>
         /// Create claims mapping policy and assign it to the service principal
@@ -114,7 +120,7 @@ namespace daemon_core
         /// <param name="claimsMappingPolicy"></param>
         /// <param name="logger"></param>
         /// <returns>Assigned claims mapping policy </returns>
-        public async Task<ClaimsMappingPolicy> configureClaimsMappingPolicy(ClaimsMappingPolicy claimsMappingPolicy, string spoId, ILogger logger)
+        public async Task<ClaimsMappingPolicy> configureClaimsMappingPolicy(ClaimsMappingPolicy claimsMappingPolicy, string spoId)
         {
             var result = await _graphClient.Policies.ClaimsMappingPolicies
                 .Request()
@@ -145,7 +151,7 @@ namespace daemon_core
         /// <param name="spId"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public async Task configureSelfSignedCertificate(Beta.ServicePrincipal servicePrincipal, string spId, ILogger logger)
+        public async Task configureSelfSignedCertificate(Beta.ServicePrincipal servicePrincipal, string spId)
         {
             _ = await _graphBetaClient.ServicePrincipals[spId]
                .Request()
