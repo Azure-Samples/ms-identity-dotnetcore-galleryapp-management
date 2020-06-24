@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-namespace daemon_console
+namespace daemon_core
 {
     using System.Collections.Generic;
     using daemon_core;
