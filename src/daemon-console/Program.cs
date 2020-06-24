@@ -28,8 +28,8 @@ namespace daemon_console
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using daemon_console.Authentication;
     using daemon_core;
+    using daemon_core.Authentication;
     using Microsoft.Graph;
     using Beta = BetaLib.Microsoft.Graph;
 

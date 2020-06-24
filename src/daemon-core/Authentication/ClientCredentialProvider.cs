@@ -1,22 +1,47 @@
-﻿using daemon_core;
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
+﻿/*
+ The MIT License (MIT)
 
-namespace daemon_console.Authentication
+Copyright (c) 2015 Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+namespace daemon_core.Authentication
 {
-    class ClientCredentialProvider: IAuthenticationProvider
+    using System;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Threading.Tasks;
+    using daemon_core;
+    using Microsoft.Graph;
+    using Microsoft.Identity.Client;
+
+    public class ClientCredentialProvider : IAuthenticationProvider
     {
-        AuthenticationConfig _config;
-        ILogger _logger;
-        IConfidentialClientApplication app;
+        private readonly AuthenticationConfig _config;
+        
+        private readonly ILogger _logger;
+
+        private readonly IConfidentialClientApplication app;
+
         /// <summary>
         /// Create an authProvider of the type client credential provider
         /// </summary>
@@ -30,7 +55,7 @@ namespace daemon_console.Authentication
             bool isUsingClientSecret = AppUsesClientSecret(config);
 
             // Even if this is a console application here, a daemon application is a confidential client application
-            
+
             if (isUsingClientSecret)
             {
                 app = ConfidentialClientApplicationBuilder
@@ -39,7 +64,6 @@ namespace daemon_console.Authentication
                     .WithAuthority(new Uri(config.Authority))
                     .Build();
             }
-
             else
             {
                 X509Certificate2 certificate = ReadCertificate(config.CertificateName);
@@ -49,6 +73,7 @@ namespace daemon_console.Authentication
                     .Build();
             }
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -59,6 +84,7 @@ namespace daemon_console.Authentication
             requestMessage.Headers.Authorization =
                 new AuthenticationHeaderValue("bearer", await GetAccessTokenAsync());
         }
+
         /// <summary>
         /// Request an access token to call MS Graph APIs
         /// </summary>

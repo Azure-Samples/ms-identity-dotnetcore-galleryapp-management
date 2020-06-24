@@ -22,13 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-namespace daemon_console
+namespace daemon_core
 {
 
     using System;
     using System.Globalization;
     using System.IO;
-    using daemon_core;
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
