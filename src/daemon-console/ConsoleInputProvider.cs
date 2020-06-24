@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-using daemon_core;
-using System;
-
 namespace daemon_console
 {
+
+    using System;
+    using daemon_core;
+
     public class ConsoleInputProvider : IInputProvider
     {
         public string ReadInput()

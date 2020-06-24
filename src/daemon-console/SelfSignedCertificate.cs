@@ -22,21 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-using System;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-
 namespace daemon_console
 {
+    using System;
+    using System.Security.Cryptography;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Text;
+
     public class SelfSignedCertificate
     {
-        public byte[] PrivateKey { get;}
+        public byte[] PrivateKey { get; }
         public byte[] PublicKey { get; }
-        public DateTime StartDateTime { get;}
+        public DateTime StartDateTime { get; }
         public DateTime EndDateTime { get; }
         public string Thumbprint { get; }
-        public byte[] CustomKeyIdentifier { get;}
+        public byte[] CustomKeyIdentifier { get; }
         private X509Certificate2 selfSignedCertificate;
         //Password used for opening the private key
         private string password;
@@ -66,7 +66,7 @@ namespace daemon_console
         /// <returns>The self-signed certificate</returns>
         private X509Certificate2 buildSelfSignedServerCertificate(string password, string certificateName)
         {
-            
+
             DateTime certificateStartDate = DateTime.UtcNow;
             DateTime certificateEndDate = certificateStartDate.AddYears(2).ToUniversalTime();
 

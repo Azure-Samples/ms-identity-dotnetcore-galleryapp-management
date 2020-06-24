@@ -22,17 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-using Microsoft.Identity.Client;
-using System;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates; //Only import this if you are using certificate
-using System.Threading.Tasks;
-
 namespace daemon_core
 {
+
+    using System;
+    using System.Linq;
+    using System.Security.Cryptography.X509Certificates; //Only import this if you are using certificate
+    using System.Threading.Tasks;
+    using Microsoft.Identity.Client;
+
     public class AcquireTokenHelper
     {
-        public static async Task<AuthenticationResult> GetAcquiredToken(ILogger logger, IAuthenticationConfig config) 
+        public static async Task<AuthenticationResult> GetAcquiredToken(ILogger logger, IAuthenticationConfig config)
         {
             // You can run this sample using ClientSecret or Certificate. The code will differ only when instantiating the IConfidentialClientApplication
             bool isUsingClientSecret = AppUsesClientSecret(config);
@@ -47,7 +48,7 @@ namespace daemon_core
                     .WithAuthority(new Uri(config.Authority))
                     .Build();
             }
-        
+
             else
             {
                 X509Certificate2 certificate = ReadCertificate(config.CertificateName);
@@ -60,15 +61,15 @@ namespace daemon_core
             // With client credentials flows the scopes is ALWAYS of the shape "resource/.default", as the 
             // application permissions need to be set statically (in the portal or by PowerShell), and then granted by
             // a tenant administrator. 
-            string[] scopes = new string[] { $"{config.ApiUrl}.default" }; 
-            
+            string[] scopes = new string[] { $"{config.ApiUrl}.default" };
+
             AuthenticationResult result = null;
             try
             {
                 result = await app.AcquireTokenForClient(scopes)
                     .ExecuteAsync();
                 logger.Info("Token acquired");
-                                
+
             }
             catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
             {

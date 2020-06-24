@@ -22,19 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-extern alias BetaLib;
-using Beta = BetaLib.Microsoft.Graph;
-using Microsoft.Graph;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
-
 namespace daemon_core
 {
+    extern alias BetaLib;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Graph;
+    using Beta = BetaLib.Microsoft.Graph;
+
     public class GalleryAppsRepository
     {
         // Graph client
@@ -89,7 +84,7 @@ namespace daemon_core
                 .Request()
                 .PostAsync();
 
-            logger.Info("applicationTemplate created with spoId =" + result.ServicePrincipal.Id + "app object Id ="+ result.Application.Id);
+            logger.Info("applicationTemplate created with spoId =" + result.ServicePrincipal.Id + "app object Id =" + result.Application.Id);
             return result;
         }
         /// <summary>
@@ -158,6 +153,6 @@ namespace daemon_core
             logger.Info("servicePrincipal updated with new keyCredentials");
 
         }
-        
+
     }
 }
