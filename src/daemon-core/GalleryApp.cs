@@ -1,4 +1,4 @@
-﻿/*
+/*
  The MIT License (MIT)
 
 Copyright (c) 2015 Microsoft Corporation
@@ -24,9 +24,17 @@ SOFTWARE.
 
 namespace daemon_core
 {
-    public interface ILogger
+    using System.Collections.Generic;
+    using daemon_core;
+
+    public class GalleryApp : IGalleryApp
     {
-        void Error(string message);
-        void Info(string message);
+        public string id { get; set; }
+        public string displayName { get; set; }
+        public string appId { get; set; }
+        public string spId { get; set; }
+        public IEnumerable<string> ReplyUrls { get; set; }
+        public IEnumerable<string> Identifier { get; set; }
+        public string PreferredSingleSignOnMode { get; set; }
     }
 }
