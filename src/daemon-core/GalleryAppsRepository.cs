@@ -81,7 +81,6 @@ namespace daemon_core
         /// </summary>
         /// <param name="id"></param>
         /// <param name="appDisplayName"></param>
-        /// <param name="logger"></param>
         /// <returns>The application and service principal created in the ApplicationServicePrincipal resource type</returns>
         public async Task<Beta.ApplicationServicePrincipal> CreateApplicationTemplate(string id, string appDisplayName)
         {
@@ -100,8 +99,7 @@ namespace daemon_core
         /// <param name="application"></param>
         /// <param name="spId"></param>
         /// <param name="appId"></param>
-        /// <param name="loger"></param>
-        public async Task configureApplicationTemplate(Beta.ServicePrincipal servicePrincipal, Application application, string spId, string appId)
+        public async Task ConfigureApplicationTemplate(Beta.ServicePrincipal servicePrincipal, Application application, string spId, string appId)
         {
             _ = await _graphBetaClient.ServicePrincipals[spId]
                 .Request()
@@ -118,9 +116,9 @@ namespace daemon_core
         /// Create claims mapping policy and assign it to the service principal
         /// </summary>
         /// <param name="claimsMappingPolicy"></param>
-        /// <param name="logger"></param>
+        /// <param name="spoId"></param>
         /// <returns>Assigned claims mapping policy </returns>
-        public async Task<ClaimsMappingPolicy> configureClaimsMappingPolicy(ClaimsMappingPolicy claimsMappingPolicy, string spoId)
+        public async Task<ClaimsMappingPolicy> ConfigureClaimsMappingPolicy(ClaimsMappingPolicy claimsMappingPolicy, string spoId)
         {
             var result = await _graphClient.Policies.ClaimsMappingPolicies
                 .Request()
@@ -151,7 +149,7 @@ namespace daemon_core
         /// <param name="spId"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public async Task configureSelfSignedCertificate(Beta.ServicePrincipal servicePrincipal, string spId)
+        public async Task ConfigureSelfSignedCertificate(Beta.ServicePrincipal servicePrincipal, string spId)
         {
             _ = await _graphBetaClient.ServicePrincipals[spId]
                .Request()

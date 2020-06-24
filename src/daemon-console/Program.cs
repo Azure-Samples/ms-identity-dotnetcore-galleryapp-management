@@ -53,14 +53,11 @@ namespace daemon_console
                     .AddSingleton<ILogger, ConsoleLogger>()
                     .AddSingleton<IInputProvider, ConsoleInputProvider>()
                     .AddSingleton(AuthenticationConfig.ReadFromJsonFile("appsettings.json"))
-                    .AddSingleton<ClientCredentialProvider>()
+                    .AddSingleton<IAuthenticationProvider, ClientCredentialProvider>()
                     .AddSingleton<GalleryAppsRepository>()
                     .BuildServiceProvider();
 
-                RunAsync(
-                    serviceProvider.GetService<ILogger>(), 
-                    serviceProvider.GetService<IInputProvider>(), 
-                    serviceProvider.GetService<GalleryAppsRepository>())
+                RunAsync(serviceProvider.GetService<ILogger>(), serviceProvider.GetService<IInputProvider>(), serviceProvider.GetService<GalleryAppsRepository>())
                     .GetAwaiter()
                     .GetResult();
             }
@@ -131,7 +128,7 @@ namespace daemon_console
             var appoId = "03ea6316-3b80-41d1-b8a6-9b337f3b2491";
 
             //Send servicePrincipal and Application to configure the applicationTemplate
-            await coreHelper.configureApplicationTemplate(servicePrincipal, application, spoId, appoId);
+            await coreHelper.ConfigureApplicationTemplate(servicePrincipal, application, spoId, appoId);
             return spoId;
         }
         
@@ -150,7 +147,7 @@ namespace daemon_console
             };
 
             // Create and assign claims mapping policy
-            await coreHelper.configureClaimsMappingPolicy(claimsMappingPolicy, spoId);
+            await coreHelper.ConfigureClaimsMappingPolicy(claimsMappingPolicy, spoId);
         }
         
         private static async Task ConfigureSigningCertificate(GalleryAppsRepository galleryAppsRepository, string appDisplayName, string spoId)
@@ -206,7 +203,7 @@ namespace daemon_console
 
             };
 
-            await galleryAppsRepository.configureSelfSignedCertificate(spKeyCredentials, spoId);
+            await galleryAppsRepository.ConfigureSelfSignedCertificate(spKeyCredentials, spoId);
         }
 
         /// <summary>
