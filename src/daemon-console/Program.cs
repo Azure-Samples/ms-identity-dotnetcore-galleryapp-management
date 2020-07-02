@@ -105,7 +105,7 @@ namespace daemon_console
         private static async Task<string> ConfigureSingleSignOn(GalleryAppsRepository coreHelper)
         {
             //Create a service principal resource type with the desired configuration
-            var servicePrincipal = new Beta.ServicePrincipal
+            var servicePrincipal = new ServicePrincipal
             {
                 PreferredSingleSignOnMode = "saml",
                 LoginUrl = "https://salesforce.com"

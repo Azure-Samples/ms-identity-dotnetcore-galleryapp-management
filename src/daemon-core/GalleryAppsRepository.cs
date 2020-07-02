@@ -99,9 +99,9 @@ namespace daemon_core
         /// <param name="application"></param>
         /// <param name="spId"></param>
         /// <param name="appId"></param>
-        public async Task ConfigureApplicationTemplate(Beta.ServicePrincipal servicePrincipal, Application application, string spId, string appId)
+        public async Task ConfigureApplicationTemplate(ServicePrincipal servicePrincipal, Application application, string spId, string appId)
         {
-            _ = await _graphBetaClient.ServicePrincipals[spId]
+            _ = await _graphClient.ServicePrincipals[spId]
                 .Request()
                 .UpdateAsync(servicePrincipal);
             logger.Info("servicePrincipal updated");
