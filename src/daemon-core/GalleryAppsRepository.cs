@@ -26,6 +26,7 @@ namespace daemon_core
 {
     extern alias BetaLib;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Graph;
     using Beta = BetaLib.Microsoft.Graph;
@@ -89,7 +90,11 @@ namespace daemon_core
                 .Request()
                 .PostAsync();
 
-            logger.Info("applicationTemplate created with spoId =" + result.ServicePrincipal.Id + "app object Id =" + result.Application.Id);
+            string spoId = result.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            string appoId = result.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+
+            logger.Info("applicationTemplate created with spoId =" + spoId + "app object Id =" + appoId);
+            //logger.Info("applicationTemplate created with spoId =" + result.ServicePrincipal.Id + "app object Id =" + result.Application.Id);
             return result;
         }
         /// <summary>
@@ -126,17 +131,17 @@ namespace daemon_core
 
             logger.Info("Claims mapping policy created. Name: " + result.DisplayName + " Id: " + result.Id);
 
-            //var assignedPolicy = new ClaimsMappingPolicy
-            //{
-            //    AdditionalData = new Dictionary<string, object>()
-            //        {
-            //        {"@odata.id",$"https://graph.microsoft.com/beta/policies/claimsMappingPolicies/{result.Id}"}
-            //        }
-            //};
+            var assignedPolicy = new ClaimsMappingPolicy
+            {
+                AdditionalData = new Dictionary<string, object>()
+                    {
+                    {"@odata.id",$"https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/{result.Id}"}
+                    }
+            };
 
-            //_ = await _graphClient.ServicePrincipals[spoId].ClaimsMappingPolicies
+            //_ = await _graphClient.ServicePrincipals[spoId].ClaimsMappingPolicies.References
             //    .Request()
-            //    .AddAsync(claimsMappingPolicy);
+            //    .AddAsync(assignedPolicy);
 
             return result;
 
