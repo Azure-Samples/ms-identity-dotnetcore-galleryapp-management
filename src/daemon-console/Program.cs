@@ -27,6 +27,7 @@ namespace daemon_console
     extern alias BetaLib;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using daemon_core;
     using daemon_core.Authentication;
@@ -73,16 +74,16 @@ namespace daemon_console
             InputProvider = inputProvider;
 
             // Step 1. Create the Gallery application
-            string appDisplayName = await CreateApplicationTemplate(galleryAppsRepository);
+            Beta.ApplicationServicePrincipal galleryAppCreated = await CreateApplicationTemplate(galleryAppsRepository);
             // Step 2. Configure single sign-on
-            string spoId = await ConfigureSingleSignOn(galleryAppsRepository);
+            string spoId = await ConfigureSingleSignOn(galleryAppsRepository, galleryAppCreated);
             // Step 3. Configure claims mapping
             await ConfigureClaimsMapping(galleryAppsRepository, spoId);
             // Step 4. Configure signing certificate
-            await ConfigureSigningCertificate(galleryAppsRepository, appDisplayName, spoId);
+            await ConfigureSigningCertificate(galleryAppsRepository, spoId);
         }
 
-        private static async Task<string> CreateApplicationTemplate(GalleryAppsRepository coreHelper)
+        private static async Task<Beta.ApplicationServicePrincipal> CreateApplicationTemplate(GalleryAppsRepository coreHelper)
         {
             Logger.Info("Enter the name of the application you want to create?");
             var appName = InputProvider.ReadInput();
@@ -99,10 +100,10 @@ namespace daemon_console
             var appTemplateId = appTemplatesResponse[selectedAppTemplateId].Id;
             var appDisplayName = appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated";
             Beta.ApplicationServicePrincipal applicationCreated = await coreHelper.CreateApplicationTemplate(appTemplateId, appDisplayName);
-            return appDisplayName;
+            return applicationCreated;
         }
 
-        private static async Task<string> ConfigureSingleSignOn(GalleryAppsRepository coreHelper)
+        private static async Task<string> ConfigureSingleSignOn(GalleryAppsRepository coreHelper, Beta.ApplicationServicePrincipal galleryApp)
         {
             //Create a service principal resource type with the desired configuration
             var servicePrincipal = new ServicePrincipal
@@ -119,13 +120,13 @@ namespace daemon_console
             var application = new Application
             {
                 Web = web,
-                IdentifierUris = new string[] { "https://testing.sdk.com" }
+                IdentifierUris = new string[] { "https://testing.sdk.com/identifier" }
             };
 
-            //var spoId = applicationCreated.ServicePrincipal.Id;
-            //var appoId = applicationCreated.Application.Id;
-            var spoId = "ee16cffa-2fe3-45a0-86c1-867c3dd83352";
-            var appoId = "03ea6316-3b80-41d1-b8a6-9b337f3b2491";
+            string spoId = galleryApp.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            string appoId = galleryApp.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            //var spoId = "ee16cffa-2fe3-45a0-86c1-867c3dd83352";
+            //var appoId = "03ea6316-3b80-41d1-b8a6-9b337f3b2491";
 
             //Send servicePrincipal and Application to configure the applicationTemplate
             await coreHelper.ConfigureApplicationTemplate(servicePrincipal, application, spoId, appoId);
@@ -150,11 +151,11 @@ namespace daemon_console
             await coreHelper.ConfigureClaimsMappingPolicy(claimsMappingPolicy, spoId);
         }
         
-        private static async Task ConfigureSigningCertificate(GalleryAppsRepository galleryAppsRepository, string appDisplayName, string spoId)
+        private static async Task ConfigureSigningCertificate(GalleryAppsRepository galleryAppsRepository, string spoId)
         {
             // Set custom signing key
             string password = Guid.NewGuid().ToString();
-            string certName = appDisplayName + "SignedCert";
+            string certName = "SelfSigned federation metadata";
             SelfSignedCertificate selfSignedCert = new SelfSignedCertificate(password, certName);
             Guid keyIDPrivateCert = Guid.NewGuid();
 
