@@ -28,6 +28,7 @@ namespace daemon_console
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using daemon_core;
     using daemon_core.Authentication;
@@ -76,6 +77,7 @@ namespace daemon_console
             // Step 1. Create the Gallery application
             Beta.ApplicationServicePrincipal galleryAppCreated = await CreateApplicationTemplate(galleryAppsRepository);
             // Step 2. Configure single sign-on
+            Thread.Sleep(10000);
             string spoId = await ConfigureSingleSignOn(galleryAppsRepository, galleryAppCreated);
             // Step 3. Configure claims mapping
             await ConfigureClaimsMapping(galleryAppsRepository, spoId);
@@ -109,18 +111,18 @@ namespace daemon_console
             var servicePrincipal = new ServicePrincipal
             {
                 PreferredSingleSignOnMode = "saml",
-                LoginUrl = "https://salesforce.com"
+                LoginUrl = "https://example.com"
             };
-            //Create the webApplication resource type with the desired configuration
+            //Create the webApplication resource type with the desired configuration. Be sure to replace the redirectUris
             var web = new WebApplication
             {
-                RedirectUris = new string[] { "https://signin.salesforce.com/saml" }
+                RedirectUris = new string[] { "https://example.com/replyurl" }
             };
-            //Create an application resource type with the desired configuration
+            //Create an application resource type with the desired configuration. Be sure to replace the IdentifierUris
             var application = new Application
             {
                 Web = web,
-                IdentifierUris = new string[] { "https://testing.sdk.com/identifier" }
+                IdentifierUris = new string[] { "https://example.com/identifier" }
             };
 
             string spoId = galleryApp.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();

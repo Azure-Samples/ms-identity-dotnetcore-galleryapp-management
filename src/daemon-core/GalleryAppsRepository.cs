@@ -27,6 +27,7 @@ namespace daemon_core
     extern alias BetaLib;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Graph;
     using Beta = BetaLib.Microsoft.Graph;
@@ -106,7 +107,7 @@ namespace daemon_core
         /// <param name="appId"></param>
         public async Task ConfigureApplicationTemplate(ServicePrincipal servicePrincipal, Application application, string spId, string appId)
         {
-            _ = await _graphClient.ServicePrincipals[spId]
+             _ = await _graphClient.ServicePrincipals[spId]
                 .Request()
                 .UpdateAsync(servicePrincipal);
             logger.Info("servicePrincipal updated");
@@ -133,16 +134,14 @@ namespace daemon_core
 
             var assignedPolicy = new ClaimsMappingPolicy
             {
-                AdditionalData = new Dictionary<string, object>()
-                    {
-                    {"@odata.id",$"https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/{result.Id}"}
-                    }
+                    Id = result.Id
+ 
             };
 
-            //_ = await _graphClient.ServicePrincipals[spoId].ClaimsMappingPolicies.References
-            //    .Request()
-            //    .AddAsync(assignedPolicy);
-
+            await _graphClient.ServicePrincipals[spoId].ClaimsMappingPolicies.References
+                .Request()
+                .AddAsync(assignedPolicy);
+            logger.Info("Assigned claims mapping policy " + result.Id + "to servicePrincipal " + spoId);
             return result;
 
         }
