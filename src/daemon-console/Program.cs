@@ -26,9 +26,6 @@ namespace daemon_console
 {
     extern alias BetaLib;
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using daemon_core;
     using daemon_core.Authentication;
@@ -44,8 +41,7 @@ namespace daemon_console
     /// </summary>
     public class Program
     {
-        private static ILogger Logger = null;
-        private static IInputProvider InputProvider = null;
+        private static readonly ILogger Logger = new ConsoleLogger();
 
         static void Main(string[] args)
         {
@@ -53,15 +49,14 @@ namespace daemon_console
             {
                 var serviceProvider = new ServiceCollection()
                     .AddSingleton<ILogger, ConsoleLogger>()
-                    .AddSingleton<IInputProvider, ConsoleInputProvider>()
                     .AddSingleton(AuthenticationConfig.ReadFromJsonFile("appsettings.json"))
                     .AddSingleton<IAuthenticationProvider, ClientCredentialProvider>()
+                    .AddSingleton<GalleryAppsProcessor>()
                     .AddSingleton<GalleryAppsRepository>()
                     .BuildServiceProvider();
 
-                RunAsync(serviceProvider.GetService<ILogger>(), serviceProvider.GetService<IInputProvider>(), serviceProvider.GetService<GalleryAppsRepository>())
-                    .GetAwaiter()
-                    .GetResult();
+                var newGalleryAppDetails = NewGalleryAppDetails(serviceProvider.GetService<GalleryAppsRepository>()).GetAwaiter().GetResult();
+                serviceProvider.GetService<GalleryAppsProcessor>().CreateGalleryAppAsync(newGalleryAppDetails).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -69,144 +64,48 @@ namespace daemon_console
             }
         }
 
-        public static async Task RunAsync(ILogger logger, IInputProvider inputProvider, GalleryAppsRepository galleryAppsRepository)
-        {
-            Logger = logger;
-            InputProvider = inputProvider;
-
-            // Step 1. Create the Gallery application
-            Beta.ApplicationServicePrincipal galleryAppCreated = await CreateApplicationTemplate(galleryAppsRepository);
-            // Step 2. Configure single sign-on
-            Thread.Sleep(10000);
-            string spoId = await ConfigureSingleSignOn(galleryAppsRepository, galleryAppCreated);
-            // Step 3. Configure claims mapping
-            await ConfigureClaimsMapping(galleryAppsRepository, spoId);
-            // Step 4. Configure signing certificate
-            await ConfigureSigningCertificate(galleryAppsRepository, spoId);
-        }
-
-        private static async Task<Beta.ApplicationServicePrincipal> CreateApplicationTemplate(GalleryAppsRepository coreHelper)
+        private static async Task<NewGalleryAppDetails> NewGalleryAppDetails(GalleryAppsRepository galleryAppsRepository)
         {
             Logger.Info("Enter the name of the application you want to create?");
-            var appName = InputProvider.ReadInput();
+            var appName = Console.ReadLine();
 
             // Using the appName provided, search for applications in the Gallery that matches the appName
-            Beta.IGraphServiceApplicationTemplatesCollectionPage appTemplatesResponse = await coreHelper.GetGalleryAppsByNameAsync(appName);
-
+            Beta.IGraphServiceApplicationTemplatesCollectionPage appTemplatesResponse = await galleryAppsRepository.GetByNameAsync(appName);
             DisplayGalleryResults(appTemplatesResponse);
 
             Logger.Info("Enter the id of the application you want to create");
-            int selectedAppTemplateId = Convert.ToInt32(InputProvider.ReadInput());
+            var selectedAppTemplateId = Convert.ToInt32(Console.ReadLine());
 
             // Create application template with appTemplateID and appDisplayName
-            var appTemplateId = appTemplatesResponse[selectedAppTemplateId].Id;
-            var appDisplayName = appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated";
-            Beta.ApplicationServicePrincipal applicationCreated = await coreHelper.CreateApplicationTemplate(appTemplateId, appDisplayName);
-            return applicationCreated;
+            var newGalleryAppDetailsBuilder = new NewGalleryAppDetails.Builder(appTemplatesResponse[selectedAppTemplateId].Id);
+            newGalleryAppDetailsBuilder.DisplayName(appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated");
+
+            Logger.Info("Please select the preferred SSO mode:");
+            Logger.Info("0. SAML");
+            newGalleryAppDetailsBuilder.PreferredSsoMode((PreferredSso)Convert.ToInt32(Console.ReadLine()));
+
+            const string defaultLoginUrl = "https://example.com";
+            Logger.Info($"Please enter the loginUrl (or press enter to use '{defaultLoginUrl}')");
+            newGalleryAppDetailsBuilder.LoginUrl(ReadAnswerOrUseDefault(defaultLoginUrl));
+
+            const string defaultReplyUrl = "https://example.com/replyurl";
+            Logger.Info($"Please enter the replyUrl (or press enter to use {defaultReplyUrl})");
+            newGalleryAppDetailsBuilder.ReplyUrl(ReadAnswerOrUseDefault(defaultReplyUrl));
+
+            const string defaultIdentifierUri = "https://example.com/identifier2";
+            Logger.Info($"Please enter the identifierUri (or press enter to use '{defaultIdentifierUri}')");
+            newGalleryAppDetailsBuilder.IdentifierUri(ReadAnswerOrUseDefault(defaultIdentifierUri));
+
+            Logger.Info("This tool will read the claims mapping policy from this location ./Files/claimsMappingPolicy.json");
+            newGalleryAppDetailsBuilder.ClaimsMappingPolicyPath("./Files/claimsMappingPolicy.json");
+
+            return newGalleryAppDetailsBuilder.Build();
         }
 
-        private static async Task<string> ConfigureSingleSignOn(GalleryAppsRepository coreHelper, Beta.ApplicationServicePrincipal galleryApp)
+        private static string ReadAnswerOrUseDefault(string defaultAnswer)
         {
-            //Create a service principal resource type with the desired configuration
-            var servicePrincipal = new ServicePrincipal
-            {
-                PreferredSingleSignOnMode = "saml",
-                LoginUrl = "https://example.com"
-            };
-            //Create the webApplication resource type with the desired configuration. Be sure to replace the redirectUris
-            var web = new WebApplication
-            {
-                RedirectUris = new string[] { "https://example.com/replyurl" }
-            };
-            //Create an application resource type with the desired configuration. Be sure to replace the IdentifierUris
-            var application = new Application
-            {
-                Web = web,
-                IdentifierUris = new string[] { "https://example.com/identifier" }
-            };
-
-            string spoId = galleryApp.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
-            string appoId = galleryApp.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
-            //var spoId = "ee16cffa-2fe3-45a0-86c1-867c3dd83352";
-            //var appoId = "03ea6316-3b80-41d1-b8a6-9b337f3b2491";
-
-            //Send servicePrincipal and Application to configure the applicationTemplate
-            await coreHelper.ConfigureApplicationTemplate(servicePrincipal, application, spoId, appoId);
-            return spoId;
-        }
-        
-        private static async Task ConfigureClaimsMapping(GalleryAppsRepository coreHelper, string spoId)
-        {
-            // Read and assign the claims mapping policy definition
-            string policyDefinition = System.IO.File.ReadAllText("./Files/claimsMappingPolicy.txt");
-
-            var claimsMappingPolicy = new ClaimsMappingPolicy
-            {
-                Definition = new List<string>()
-                {
-                    policyDefinition
-                },
-                DisplayName = "automated-salesforce"
-            };
-
-            // Create and assign claims mapping policy
-            await coreHelper.ConfigureClaimsMappingPolicy(claimsMappingPolicy, spoId);
-        }
-        
-        private static async Task ConfigureSigningCertificate(GalleryAppsRepository galleryAppsRepository, string spoId)
-        {
-            // Set custom signing key
-            string password = Guid.NewGuid().ToString();
-            string certName = "SelfSigned federation metadata";
-            SelfSignedCertificate selfSignedCert = new SelfSignedCertificate(password, certName);
-            Guid keyIDPrivateCert = Guid.NewGuid();
-
-            var privateKey = new Beta.KeyCredential()
-            {
-                CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
-                EndDateTime = selfSignedCert.EndDateTime,
-                KeyId = keyIDPrivateCert,
-                StartDateTime = selfSignedCert.StartDateTime,
-                Type = "AsymmetricX509Cert",
-                Usage = "Sign",
-                Key = selfSignedCert.PrivateKey
-            };
-            var publicKey = new Beta.KeyCredential()
-            {
-                CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
-                EndDateTime = selfSignedCert.EndDateTime,
-                KeyId = Guid.NewGuid(),
-                StartDateTime = selfSignedCert.StartDateTime,
-                Type = "AsymmetricX509Cert",
-                Usage = "Verify",
-                Key = selfSignedCert.PublicKey
-            };
-
-            List<Beta.KeyCredential> keyCredentials = new List<Beta.KeyCredential>()
-            {
-                privateKey,
-                publicKey
-            };
-            List<Beta.PasswordCredential> passwordCredentials = new List<Beta.PasswordCredential>()
-            {
-                new Beta.PasswordCredential()
-                {
-                    CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
-                    KeyId = keyIDPrivateCert,
-                    EndDateTime = selfSignedCert.EndDateTime,
-                    StartDateTime = selfSignedCert.StartDateTime,
-                    SecretText = password
-                }
-            };
-            var spKeyCredentials = new Beta.ServicePrincipal
-            {
-                KeyCredentials = keyCredentials,
-                PasswordCredentials = passwordCredentials,
-                PreferredTokenSigningKeyThumbprint = selfSignedCert.Thumbprint
-
-            };
-
-            await galleryAppsRepository.ConfigureSelfSignedCertificate(spKeyCredentials, spoId);
+            var answer = Console.ReadLine();
+            return string.IsNullOrEmpty(answer) ? defaultAnswer : answer;
         }
 
         /// <summary>
