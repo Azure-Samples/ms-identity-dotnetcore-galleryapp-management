@@ -22,17 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-namespace daemon_console
+namespace daemon_core
 {
-
-    using System;
-    using daemon_core;
-
-    public class ConsoleInputProvider : IInputProvider
+    public class GalleryAppCreationResult
     {
-        public string ReadInput()
+        public string AppDisplayName { get; private set; }
+
+        public string ServicePrincipalId { get; private set; }
+
+        public string ApplicationId { get; private set; }
+
+        public static GalleryAppCreationResult Create(string appDisplayName, string servicePrincipalId, string applicationId)
         {
-            return Console.ReadLine();
+            return new GalleryAppCreationResult
+            {
+                AppDisplayName = appDisplayName,
+                ServicePrincipalId = servicePrincipalId,
+                ApplicationId = applicationId
+            };
         }
     }
 }

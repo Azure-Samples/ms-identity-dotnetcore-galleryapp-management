@@ -94,11 +94,10 @@ namespace daemon_core
                 .Request()
                 .PostAsync();
 
-            string spoId = result.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
-            string appoId = result.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            var spoId = result.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            var appoId = result.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
 
             logger.Info("applicationTemplate created with spoId =" + spoId + "app object Id =" + appoId);
-            //logger.Info("applicationTemplate created with spoId =" + result.ServicePrincipal.Id + "app object Id =" + result.Application.Id);
             return result;
         }
 
@@ -165,7 +164,6 @@ namespace daemon_core
                .Request()
                .UpdateAsync(servicePrincipal);
             logger.Info("servicePrincipal updated with new keyCredentials");
-
         }
 
     }

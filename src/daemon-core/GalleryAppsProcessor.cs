@@ -100,6 +100,7 @@ namespace daemon_core
                 Usage = "Sign",
                 Key = selfSignedCert.PrivateKey
             };
+
             var publicKey = new Beta.KeyCredential()
             {
                 CustomKeyIdentifier = selfSignedCert.CustomKeyIdentifier,
@@ -111,12 +112,13 @@ namespace daemon_core
                 Key = selfSignedCert.PublicKey
             };
 
-            List<Beta.KeyCredential> keyCredentials = new List<Beta.KeyCredential>()
+            var keyCredentials = new List<Beta.KeyCredential>()
             {
                 privateKey,
                 publicKey
             };
-            List<Beta.PasswordCredential> passwordCredentials = new List<Beta.PasswordCredential>()
+
+            var passwordCredentials = new List<Beta.PasswordCredential>()
             {
                 new Beta.PasswordCredential()
                 {
@@ -127,6 +129,7 @@ namespace daemon_core
                     SecretText = password
                 }
             };
+
             var spKeyCredentials = new Beta.ServicePrincipal
             {
                 KeyCredentials = keyCredentials,

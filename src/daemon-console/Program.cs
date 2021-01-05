@@ -66,30 +66,28 @@ namespace daemon_console
 
         private static async Task<NewGalleryAppDetails> NewGalleryAppDetails(GalleryAppsRepository galleryAppsRepository)
         {
-            Logger.Info("Enter the name of the application you want to create?");
+            Logger.Info("Enter the name of the application you want to create:");
             var appName = Console.ReadLine();
 
             // Using the appName provided, search for applications in the Gallery that matches the appName
             Beta.IGraphServiceApplicationTemplatesCollectionPage appTemplatesResponse = await galleryAppsRepository.GetByNameAsync(appName);
             DisplayGalleryResults(appTemplatesResponse);
 
-            Logger.Info("Enter the id of the application you want to create");
+            Logger.Info("Select the application you want to create:");
             var selectedAppTemplateId = Convert.ToInt32(Console.ReadLine());
 
             // Create application template with appTemplateID and appDisplayName
             var newGalleryAppDetailsBuilder = new NewGalleryAppDetails.Builder(appTemplatesResponse[selectedAppTemplateId].Id);
             newGalleryAppDetailsBuilder.DisplayName(appTemplatesResponse[selectedAppTemplateId].DisplayName + " Automated");
 
-            Logger.Info("Please select the preferred SSO mode:");
-            Logger.Info("0. SAML");
-            newGalleryAppDetailsBuilder.PreferredSsoMode((PreferredSso)Convert.ToInt32(Console.ReadLine()));
+            newGalleryAppDetailsBuilder.PreferredSsoMode(PreferredSso.SAML);
 
             const string defaultLoginUrl = "https://example.com";
             Logger.Info($"Please enter the loginUrl (or press enter to use '{defaultLoginUrl}')");
             newGalleryAppDetailsBuilder.LoginUrl(ReadAnswerOrUseDefault(defaultLoginUrl));
 
             const string defaultReplyUrl = "https://example.com/replyurl";
-            Logger.Info($"Please enter the replyUrl (or press enter to use {defaultReplyUrl})");
+            Logger.Info($"Please enter the replyUrl (or press enter to use '{defaultReplyUrl}')");
             newGalleryAppDetailsBuilder.ReplyUrl(ReadAnswerOrUseDefault(defaultReplyUrl));
 
             const string defaultIdentifierUri = "https://example.com/identifier2";
