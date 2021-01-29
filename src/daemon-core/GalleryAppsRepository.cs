@@ -52,12 +52,13 @@ namespace daemon_core
             _graphBetaClient = new Beta.GraphServiceClient(authProvider);
             this.logger = logger;
         }
+
         /// <summary>
         /// Search and retrieve the gallery applications that startWith the param "appName"
         /// </summary>
         /// <param name="appName"></param>
         /// <returns>A list with the gallery apps that matches the search</returns>
-        public async Task<Beta.IGraphServiceApplicationTemplatesCollectionPage> GetGalleryAppsByNameAsync(string appName)
+        public async Task<Beta.IGraphServiceApplicationTemplatesCollectionPage> GetByNameAsync(string appName)
         {
             Beta.IGraphServiceApplicationTemplatesCollectionPage galleryApps;
             var queryObjects = new List<QueryOption>
@@ -76,8 +77,10 @@ namespace daemon_core
                     .Top(5)
                     .Skip(0)
                     .GetAsync();
+
             return galleryApps;
         }
+
         /// <summary>
         /// Create the application based on the applicationTemplate
         /// </summary>
@@ -91,13 +94,13 @@ namespace daemon_core
                 .Request()
                 .PostAsync();
 
-            string spoId = result.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
-            string appoId = result.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            var spoId = result.ServicePrincipal.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
+            var appoId = result.Application.AdditionalData.First(x => x.Key == "objectId").Value.ToString();
 
             logger.Info("applicationTemplate created with spoId =" + spoId + "app object Id =" + appoId);
-            //logger.Info("applicationTemplate created with spoId =" + result.ServicePrincipal.Id + "app object Id =" + result.Application.Id);
             return result;
         }
+
         /// <summary>
         /// Configure single sign-on settings for application and service principal 
         /// </summary>
@@ -118,6 +121,7 @@ namespace daemon_core
 
             logger.Info("Application updated");
         }
+
         /// <summary>
         /// Create claims mapping policy and assign it to the service principal
         /// </summary>
@@ -145,6 +149,7 @@ namespace daemon_core
             return result;
 
         }
+
         /// <summary>
         /// Set the keyCredentials property in the servicePrincipal. It's expected that the servicePrincipal will have the
         /// keyCredential and the passwordCredential configured
@@ -159,7 +164,6 @@ namespace daemon_core
                .Request()
                .UpdateAsync(servicePrincipal);
             logger.Info("servicePrincipal updated with new keyCredentials");
-
         }
 
     }

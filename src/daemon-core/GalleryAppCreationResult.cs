@@ -24,8 +24,22 @@ SOFTWARE.
 
 namespace daemon_core
 {
-    public interface IInputProvider
+    public class GalleryAppCreationResult
     {
-        string ReadInput();
+        public string AppDisplayName { get; private set; }
+
+        public string ServicePrincipalId { get; private set; }
+
+        public string ApplicationId { get; private set; }
+
+        public static GalleryAppCreationResult Create(string appDisplayName, string servicePrincipalId, string applicationId)
+        {
+            return new GalleryAppCreationResult
+            {
+                AppDisplayName = appDisplayName,
+                ServicePrincipalId = servicePrincipalId,
+                ApplicationId = applicationId
+            };
+        }
     }
 }

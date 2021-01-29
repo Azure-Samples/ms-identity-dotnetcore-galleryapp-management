@@ -22,17 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-namespace daemon_console
+namespace daemon_core
 {
-
-    using System;
-    using daemon_core;
-
-    public class ConsoleInputProvider : IInputProvider
+    public enum PreferredSso
     {
-        public string ReadInput()
-        {
-            return Console.ReadLine();
-        }
+        SAML = 0
     }
 }
