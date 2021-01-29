@@ -99,7 +99,7 @@ namespace daemon_core
                 {
                     policyDefinition
                 },
-                DisplayName = "automated-salesforce"
+                DisplayName = "automated-mappings-policy"
             };
 
             // Create and assign claims mapping policy
