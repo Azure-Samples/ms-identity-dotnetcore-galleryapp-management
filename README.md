@@ -22,9 +22,9 @@ This sample demostrates how to create and configure single sign-on for [Azure AD
 
 ## About the sample
 
-The sample contains a daemon-console application that prompts the user what application should be created from the Azure AD Gallery. Also, it orchestrates the actions to configure single sign-on for the application. 
+The sample contains a daemon-console application that prompts the users of what application to create from the Azure AD Gallery. Also, it orchestrates the actions to configure single sign-on for the application. 
 
-The daemon-core applications contains the logic to create and configure single sign-on for an Azure AD gallery app. Using the MS Graph SDK .net, the daemon-core application can:
+The daemon-core applications contain the logic to create and configure single sign-on for an Azure AD gallery app. Using the MS Graph SDK .net, the daemon-core application can:
 
 - Search and create an Azure AD gallery app
 - Configure basic SAML properties like Identifier, Reply URL and preferredSSOMode
