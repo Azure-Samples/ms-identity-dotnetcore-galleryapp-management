@@ -92,7 +92,7 @@ As a first step you'll need to:
    - Click the **Add a permission** button and then,
    - Ensure that the **Microsoft APIs** tab is selected
    - In the *Commonly used Microsoft APIs* section, click on **Microsoft Graph**
-   - In the **Application permissions** section, ensure that the right permissions are checked: **Application.ReadWrite.All**, **Directory.ReadWrite.All**, **Policy.ReadWrite.ApplicationConfiguration**
+   - In the **Application permissions** section, ensure that the right permissions are checked: **Application.ReadWrite.All**, **Policy.ReadWrite.ApplicationConfiguration**
    - Select the **Add permissions** button
 
 7. At this stage permissions are assigned correctly but the client app does not allow interaction. 
