@@ -18,7 +18,7 @@ Guidance on onboarding samples to docs.microsoft.com/samples: https://review.doc
 Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
 -->
 
-This sample demostrates how to create and configure single sign-on for [Azure AD gallery apps](https://docs.microsoft.com/azure/active-directory/saas-apps/tutorial-list) using Microsoft Graph API SDK for .Net.
+This sample demonstrates how to create and configure single sign-on for [Azure AD gallery apps](https://docs.microsoft.com/azure/active-directory/saas-apps/tutorial-list) using Microsoft Graph API SDK for .Net.
 
 ## About the sample
 
@@ -77,7 +77,7 @@ As a first step you'll need to:
 
 1. Navigate to the Microsoft identity platform for developers [App registrations](https://go.microsoft.com/fwlink/?linkid=2083908) page.
 2. Select **New registration**.
-   - In the **Name** section, enter a meaningful application name that will be displayed to users of the app, for example `daemon-console`.
+   - In the **Name** section, enter a meaningful application name that will be displayed to users of the app, for example, `daemon-console`.
    - In the **Supported account types** section, select **Accounts in this organizational directory only ({tenant name})**.
    - Select **Register** to create the application.
 4. On the app **Overview** page, find the **Application (client) ID** value and record it for later. You'll need it to configure the Visual Studio configuration file for this project.
@@ -95,7 +95,7 @@ As a first step you'll need to:
    - In the **Application permissions** section, ensure that the right permissions are checked: **Application.ReadWrite.All**, **Directory.ReadWrite.All**, **Policy.ReadWrite.ApplicationConfiguration**
    - Select the **Add permissions** button
 
-7. At this stage permissions are assigned correctly but the client app does not allow interaction. 
+7. At this stage, permissions are assigned correctly but the client app does not allow interaction. 
    Therefore no consent can be presented via a UI and accepted to use the service app. 
    Click the **Grant/revoke admin consent for {tenant}** button, and then select **Yes** when you are asked if you want to grant consent for the
    requested permissions for all account in the tenant.
