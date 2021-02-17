@@ -4,8 +4,6 @@ languages:
 - csharp
 products:
 - dotnet
-description: "Add 150 character max description"
-urlFragment: "update-this-to-unique-url-stub"
 ---
 
 # Automate SAML-based SSO app configuration using MS Graph API SDK .Net
