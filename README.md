@@ -3,6 +3,7 @@ page_type: sample
 languages:
 - csharp
 products:
+- azure
 - azure-active-directory
 ---
 
