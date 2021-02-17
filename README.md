@@ -1,6 +1,7 @@
 ---
 page_type: sample
 name: "Automate SAML-based SSO app configuration using MS Graph API SDK .NET"
+description: "Learn how to create and configure SAML-based Single Sign-On (SSO) for Azure AD gallery apps using Microsoft Graph API SDK for .NET."
 languages:
 - csharp
 products:
@@ -18,7 +19,7 @@ Guidance on onboarding samples to docs.microsoft.com/samples: https://review.doc
 Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
 -->
 
-This sample demonstrates how to create and configure single sign-on for [Azure AD gallery apps](https://docs.microsoft.com/azure/active-directory/saas-apps/tutorial-list) using Microsoft Graph API SDK for .Net. 
+This sample demonstrates how to create and configure single sign-on for [Azure AD gallery apps](https://docs.microsoft.com/azure/active-directory/saas-apps/tutorial-list) using Microsoft Graph API SDK for .NET.
 
 ## About the sample
 
