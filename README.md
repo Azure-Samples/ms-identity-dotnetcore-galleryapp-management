@@ -1,11 +1,11 @@
 ---
 page_type: sample
+name: "Automate SAML-based SSO app configuration using MS Graph API SDK .NET"
 languages:
 - csharp
 products:
 - azure
 - azure-active-directory
-name: "Automate SAML-based SSO app configuration using MS Graph API SDK .NET"
 ---
 
 # Automate SAML-based SSO app configuration using MS Graph API SDK .NET
