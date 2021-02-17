@@ -5,9 +5,10 @@ languages:
 products:
 - azure
 - azure-active-directory
+name: "Automate SAML-based SSO app configuration using MS Graph API SDK .NET"
 ---
 
-# Automate SAML-based SSO app configuration using MS Graph API SDK .Net
+# Automate SAML-based SSO app configuration using MS Graph API SDK .NET
 
 <!-- 
 Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
